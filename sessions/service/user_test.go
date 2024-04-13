@@ -1,10 +1,8 @@
 package service_test
 
 import (
-	"os"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/VitoNaychev/elysium-challenge/assert"
 	"github.com/VitoNaychev/elysium-challenge/crypto"
@@ -47,14 +45,9 @@ func (s *StubUserRepo) GetByEmail(email string) (domain.User, error) {
 
 func TestCreateUser(t *testing.T) {
 	godotenv.Load("../test.env")
-	secret := []byte(os.Getenv("SECRET"))
-	expiresAt, err := time.ParseDuration(os.Getenv("EXPIRES_AT"))
-	assert.RequireNoError(t, err)
 
-	jwtConfig := crypto.JWTConfig{
-		Secret:    secret,
-		ExpiresAt: expiresAt,
-	}
+	jwtConfig, err := crypto.InitJWTConfigFromEnv()
+	assert.RequireNoError(t, err)
 
 	t.Run("stores new user", func(t *testing.T) {
 		wantUserID := 10
@@ -129,14 +122,9 @@ func TestCreateUser(t *testing.T) {
 
 func TestLoginUser(t *testing.T) {
 	godotenv.Load("../test.env")
-	secret := []byte(os.Getenv("SECRET"))
-	expiresAt, err := time.ParseDuration(os.Getenv("EXPIRES_AT"))
-	assert.RequireNoError(t, err)
 
-	jwtConfig := crypto.JWTConfig{
-		Secret:    secret,
-		ExpiresAt: expiresAt,
-	}
+	jwtConfig, err := crypto.InitJWTConfigFromEnv()
+	assert.RequireNoError(t, err)
 
 	t.Run("return ErrEmailNotFound on user with no such email", func(t *testing.T) {
 		wantUser := domain.User{
