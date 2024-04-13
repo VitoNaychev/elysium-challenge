@@ -28,3 +28,21 @@ func (u *UserService) CreateUser(user *domain.User) error {
 
 	return nil
 }
+
+func (u *UserService) Login(email, password string) (string, error) {
+	user, err := u.repo.GetByEmail(email)
+	if err != nil {
+		return "", ErrEmailNotFound
+	}
+
+	if user.Password != password {
+		return "", ErrWrongPassword
+	}
+
+	jwt, _ := crypto.GenerateJWT(u.jwtConfig, user.ID)
+	user.JWTs = append(user.JWTs, jwt)
+
+	u.repo.Update(&user)
+
+	return jwt, nil
+}
