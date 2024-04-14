@@ -57,20 +57,33 @@ func GenerateJWT(config JWTConfig, subject int) (string, error) {
 	tokenString, err := token.SignedString(config.Secret)
 
 	if err != nil {
-		return "", err
+		return "", NewCryptoError(err.Error())
 	}
 
 	return tokenString, nil
 }
 
-func VerifyJWT(config JWTConfig, jwtString string) (*jwt.Token, error) {
+func VerifyJWT(config JWTConfig, jwtString string) (int, error) {
 	token, err := jwt.Parse(jwtString, func(token *jwt.Token) (interface{}, error) {
 		return config.Secret, nil
 	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}))
 
 	if err != nil {
-		return nil, err
+		return -1, err
 	}
 
-	return token, nil
+	subjectIDStr, err := token.Claims.GetSubject()
+	if err != nil {
+		return -1, NewCryptoError(err.Error())
+	}
+	if subjectIDStr == "" {
+		return -1, ErrMissingSubject
+	}
+
+	subjectID, err := strconv.Atoi(subjectIDStr)
+	if err != nil {
+		return -1, ErrNonintegerSubject
+	}
+
+	return subjectID, nil
 }
