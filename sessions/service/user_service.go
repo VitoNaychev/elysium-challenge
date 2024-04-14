@@ -60,3 +60,27 @@ func (u *UserService) Authenticate(jwt string) (int, error) {
 
 	return id, nil
 }
+
+func (u *UserService) Logout(jwt string) error {
+	id, err := crypto.VerifyJWT(u.jwtConfig, jwt)
+	if err != nil {
+		return NewUserServiceError("couldn't verigy JWT", err)
+	}
+
+	user, err := u.repo.GetByID(id)
+	if err != nil {
+		return ErrUserNotFound
+	}
+
+	err = user.InvalidateJWT(jwt)
+	if err != nil {
+		return NewUserServiceError("couldn't invalidate JWT", err)
+	}
+
+	err = u.repo.Update(&user)
+	if err != nil {
+		return NewUserServiceError("couldn't update user", err)
+	}
+
+	return nil
+}

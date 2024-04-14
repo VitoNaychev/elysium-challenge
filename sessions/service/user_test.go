@@ -269,6 +269,83 @@ func TestAuthenticate(t *testing.T) {
 	})
 }
 
+func TestLogout(t *testing.T) {
+	godotenv.Load("../test.env")
+
+	jwtConfig, err := crypto.InitJWTConfigFromEnv()
+	assert.RequireNoError(t, err)
+
+	t.Run("returns UserServiceError on invalid JWT", func(t *testing.T) {
+		invalidJWT := "invalidJWT"
+
+		repo := &StubUserRepo{}
+		userService := service.NewUserService(jwtConfig, repo)
+
+		err := userService.Logout(invalidJWT)
+		assert.ErrorType[*service.UserServiceError](t, err)
+	})
+
+	t.Run("return ErrUserNotFound on missing user", func(t *testing.T) {
+		unknownUserID := 15
+
+		repo := &StubUserRepo{}
+		userService := service.NewUserService(jwtConfig, repo)
+
+		jwt, err := crypto.GenerateJWT(jwtConfig, unknownUserID)
+		assert.RequireNoError(t, err)
+
+		err = userService.Logout(jwt)
+		assert.Equal(t, err, (error)(service.ErrUserNotFound))
+	})
+
+	t.Run("returns UserServiceError on missing JWTs array entry", func(t *testing.T) {
+		wantUser := domain.User{
+			ID:        10,
+			FirstName: "John",
+			LastName:  "Doe",
+			Email:     "johndoe@example.com",
+			Password:  "samplepassword",
+		}
+
+		jwt, err := crypto.GenerateJWT(jwtConfig, wantUser.ID)
+		assert.RequireNoError(t, err)
+
+		wantUser.JWTs = []string{"sampleEntry"}
+		repo := &StubUserRepo{
+			users: []domain.User{wantUser},
+		}
+		userService := service.NewUserService(jwtConfig, repo)
+
+		err = userService.Logout(jwt)
+		assert.ErrorType[*service.UserServiceError](t, err)
+	})
+
+	t.Run("removes JWTs array entry on valid JWT", func(t *testing.T) {
+		wantUser := domain.User{
+			ID:        10,
+			FirstName: "John",
+			LastName:  "Doe",
+			Email:     "johndoe@example.com",
+			Password:  "samplepassword",
+		}
+
+		jwt, err := crypto.GenerateJWT(jwtConfig, wantUser.ID)
+		assert.RequireNoError(t, err)
+
+		wantUser.JWTs = []string{"sampleEntry", jwt}
+		repo := &StubUserRepo{
+			users: []domain.User{wantUser},
+		}
+		userService := service.NewUserService(jwtConfig, repo)
+
+		err = userService.Logout(jwt)
+		assert.RequireNoError(t, err)
+
+		wantUser.JWTs = []string{"sampleEntry"}
+		assert.Equal(t, repo.spyUpdateUser, wantUser)
+	})
+}
+
 func assertValidJWT(t testing.TB, jwtConfig crypto.JWTConfig, jwt string, wantUserID int) {
 	t.Helper()
 
