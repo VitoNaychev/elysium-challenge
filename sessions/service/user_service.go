@@ -46,3 +46,17 @@ func (u *UserService) Login(email, password string) (string, error) {
 
 	return jwt, nil
 }
+
+func (u *UserService) Authenticate(jwt string) (int, error) {
+	id, err := crypto.VerifyJWT(u.jwtConfig, jwt)
+	if err != nil {
+		return -1, NewUserServiceError("couldn't verigy JWT", err)
+	}
+
+	_, err = u.repo.GetByID(id)
+	if err != nil {
+		return -1, ErrUserNotFound
+	}
+
+	return id, nil
+}
