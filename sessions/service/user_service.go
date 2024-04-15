@@ -50,7 +50,7 @@ func (u *UserService) Login(email, password string) (string, error) {
 func (u *UserService) Authenticate(jwt string) (int, error) {
 	id, err := crypto.VerifyJWT(u.jwtConfig, jwt)
 	if err != nil {
-		return -1, NewUserServiceError("couldn't verigy JWT", err)
+		return -1, NewUserServiceError("couldn't verify JWT", err)
 	}
 
 	_, err = u.repo.GetByID(id)
@@ -64,7 +64,7 @@ func (u *UserService) Authenticate(jwt string) (int, error) {
 func (u *UserService) Logout(jwt string) error {
 	id, err := crypto.VerifyJWT(u.jwtConfig, jwt)
 	if err != nil {
-		return NewUserServiceError("couldn't verigy JWT", err)
+		return ErrInvalidJWT.Wrap(err)
 	}
 
 	user, err := u.repo.GetByID(id)
@@ -74,7 +74,7 @@ func (u *UserService) Logout(jwt string) error {
 
 	err = user.InvalidateJWT(jwt)
 	if err != nil {
-		return NewUserServiceError("couldn't invalidate JWT", err)
+		return ErrInvalidJWT.Wrap(err)
 	}
 
 	err = u.repo.Update(&user)

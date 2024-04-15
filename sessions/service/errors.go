@@ -1,7 +1,5 @@
 package service
 
-import "errors"
-
 type UserServiceError struct {
 	msg string
 	err error
@@ -22,8 +20,15 @@ func (u *UserServiceError) Unwrap() error {
 	return u.err
 }
 
+func (u *UserServiceError) Wrap(err error) error {
+	u.err = err
+	return u
+}
+
 var (
 	ErrUserNotFound  = &UserServiceError{msg: "user doesn't exist"}
-	ErrEmailNotFound = errors.New("user with this email doesn't exist")
-	ErrWrongPassword = errors.New("wrong password for user with this email")
+	ErrEmailNotFound = &UserServiceError{msg: "user with this email doesn't exist"}
+	ErrWrongPassword = &UserServiceError{msg: "wrong password for user with this email"}
+
+	ErrInvalidJWT = &UserServiceError{msg: "invalid JWT"}
 )

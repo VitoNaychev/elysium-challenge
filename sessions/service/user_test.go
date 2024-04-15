@@ -149,7 +149,7 @@ func TestLoginUser(t *testing.T) {
 		userService := service.NewUserService(jwtConfig, repo)
 
 		_, err := userService.Login("missingemail@example.com", wantUser.Password)
-		assert.Equal(t, err, service.ErrEmailNotFound)
+		assert.Equal(t, err, (error)(service.ErrEmailNotFound))
 	})
 
 	t.Run("return ErrWrongPassword on wrong password", func(t *testing.T) {
@@ -166,7 +166,7 @@ func TestLoginUser(t *testing.T) {
 		userService := service.NewUserService(jwtConfig, repo)
 
 		_, err := userService.Login(wantUser.Email, "wrongpassword")
-		assert.Equal(t, err, service.ErrWrongPassword)
+		assert.Equal(t, err, (error)(service.ErrWrongPassword))
 	})
 
 	t.Run("generates JWT", func(t *testing.T) {
