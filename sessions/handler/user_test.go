@@ -11,6 +11,7 @@ import (
 	"github.com/VitoNaychev/elysium-challenge/assert"
 	"github.com/VitoNaychev/elysium-challenge/sessions/domain"
 	"github.com/VitoNaychev/elysium-challenge/sessions/handler"
+	"github.com/VitoNaychev/elysium-challenge/sessions/service"
 )
 
 type StubUserService struct {
@@ -28,6 +29,10 @@ func (s *StubUserService) Create(user *domain.User) error {
 	user.JWTs = []string{s.dummyJWT}
 
 	return s.dummyErr
+}
+
+func (s *StubUserService) Login(email, password string) (string, error) {
+	return s.dummyJWT, s.dummyErr
 }
 
 func TestSignUpHandler(t *testing.T) {
@@ -147,5 +152,121 @@ func TestSignUpHandler(t *testing.T) {
 		json.NewDecoder(response.Body).Decode(&errorResponse)
 
 		assert.Equal(t, errorResponse.Message, dummyError.Error())
+	})
+}
+
+func TestLoginHandler(t *testing.T) {
+	t.Run("returns new JWT on correct email and password", func(t *testing.T) {
+		wantResponse := handler.JWTResponse{
+			Token: "sampleToken",
+		}
+
+		loginRequest := handler.LoginRequest{
+			Email:    "johndoe@example.com",
+			Password: "samplepassword",
+		}
+
+		reqBody := bytes.NewBuffer([]byte{})
+		json.NewEncoder(reqBody).Encode(loginRequest)
+
+		request, _ := http.NewRequest(http.MethodPost, "/user/login", reqBody)
+		response := httptest.NewRecorder()
+
+		userService := &StubUserService{
+			dummyJWT: wantResponse.Token,
+		}
+		userHandler := handler.NewUserHandler(userService)
+
+		userHandler.Login(response, request)
+		assert.Equal(t, response.Code, http.StatusOK)
+
+		var gotResponse handler.JWTResponse
+		json.NewDecoder(response.Body).Decode(&gotResponse)
+
+		assert.Equal(t, gotResponse, wantResponse)
+	})
+
+	t.Run("returns Unauthorized on ErrEmailNotFound", func(t *testing.T) {
+		dummyError := service.ErrEmailNotFound
+
+		loginRequest := handler.LoginRequest{
+			Email:    "johndoe@example.com",
+			Password: "samplepassword",
+		}
+
+		reqBody := bytes.NewBuffer([]byte{})
+		json.NewEncoder(reqBody).Encode(loginRequest)
+
+		request, _ := http.NewRequest(http.MethodPost, "/user/login", reqBody)
+		response := httptest.NewRecorder()
+
+		userService := &StubUserService{
+			dummyErr: dummyError,
+		}
+		userHandler := handler.NewUserHandler(userService)
+
+		userHandler.Login(response, request)
+		assert.Equal(t, response.Code, http.StatusUnauthorized)
+
+		var gotResponse handler.ErrorResponse
+		json.NewDecoder(response.Body).Decode(&gotResponse)
+
+		assert.Equal(t, gotResponse.Message, dummyError.Error())
+	})
+
+	t.Run("returns Unauthorized on ErrWrongPassowrd", func(t *testing.T) {
+		dummyError := service.ErrWrongPassword
+
+		loginRequest := handler.LoginRequest{
+			Email:    "johndoe@example.com",
+			Password: "samplepassword",
+		}
+
+		reqBody := bytes.NewBuffer([]byte{})
+		json.NewEncoder(reqBody).Encode(loginRequest)
+
+		request, _ := http.NewRequest(http.MethodPost, "/user/login", reqBody)
+		response := httptest.NewRecorder()
+
+		userService := &StubUserService{
+			dummyErr: dummyError,
+		}
+		userHandler := handler.NewUserHandler(userService)
+
+		userHandler.Login(response, request)
+		assert.Equal(t, response.Code, http.StatusUnauthorized)
+
+		var gotResponse handler.ErrorResponse
+		json.NewDecoder(response.Body).Decode(&gotResponse)
+
+		assert.Equal(t, gotResponse.Message, dummyError.Error())
+	})
+
+	t.Run("returns Internal Server Error on unknown error from UserService", func(t *testing.T) {
+		dummyError := errors.New("dummy error")
+
+		loginRequest := handler.LoginRequest{
+			Email:    "johndoe@example.com",
+			Password: "samplepassword",
+		}
+
+		reqBody := bytes.NewBuffer([]byte{})
+		json.NewEncoder(reqBody).Encode(loginRequest)
+
+		request, _ := http.NewRequest(http.MethodPost, "/user/login", reqBody)
+		response := httptest.NewRecorder()
+
+		userService := &StubUserService{
+			dummyErr: dummyError,
+		}
+		userHandler := handler.NewUserHandler(userService)
+
+		userHandler.Login(response, request)
+		assert.Equal(t, response.Code, http.StatusInternalServerError)
+
+		var gotResponse handler.ErrorResponse
+		json.NewDecoder(response.Body).Decode(&gotResponse)
+
+		assert.Equal(t, gotResponse.Message, dummyError.Error())
 	})
 }

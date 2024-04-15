@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/VitoNaychev/elysium-challenge/sessions/domain"
+	"github.com/VitoNaychev/elysium-challenge/sessions/service"
 )
 
 var (
@@ -14,6 +15,7 @@ var (
 
 type IUserService interface {
 	Create(*domain.User) error
+	Login(string, string) (string, error)
 }
 
 type UserHandler struct {
@@ -29,7 +31,6 @@ func NewUserHandler(userService IUserService) *UserHandler {
 func (u *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	if r.Body == nil {
 		writeErrorResponse(w, http.StatusBadRequest, ErrEmptyBody)
-
 		return
 	}
 
@@ -45,6 +46,32 @@ func (u *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := userToSignUpResponse(user)
+	json.NewEncoder(w).Encode(response)
+}
+
+func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	if r.Body == nil {
+		writeErrorResponse(w, http.StatusBadRequest, ErrEmptyBody)
+		return
+	}
+
+	var request LoginRequest
+	json.NewDecoder(r.Body).Decode(&request)
+
+	jwt, err := u.userService.Login(request.Email, request.Password)
+	if err != nil {
+		if errors.Is(err, service.ErrEmailNotFound) || errors.Is(err, service.ErrWrongPassword) {
+			writeErrorResponse(w, http.StatusUnauthorized, err)
+			return
+		} else {
+			writeErrorResponse(w, http.StatusInternalServerError, err)
+			return
+		}
+	}
+
+	response := JWTResponse{
+		Token: jwt,
+	}
 	json.NewEncoder(w).Encode(response)
 }
 

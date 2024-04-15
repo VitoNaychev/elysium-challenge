@@ -6,6 +6,11 @@ type ErrorResponse struct {
 	Message string `json:"message"`
 }
 
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 type SignUpResponse struct {
 	JWT  JWTResponse  `json:"jwt"`
 	User UserResponse `json:"user"`
