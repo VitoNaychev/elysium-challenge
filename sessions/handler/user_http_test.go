@@ -41,6 +41,10 @@ func (s *StubUserService) Logout(jwt string) error {
 	return s.dummyErr
 }
 
+func (s *StubUserService) Authenticate(jwt string) (int, error) {
+	return s.dummyUserID, s.dummyErr
+}
+
 func TestSignUpHandler(t *testing.T) {
 	t.Run("creates new user", func(t *testing.T) {
 		wantUser := domain.User{

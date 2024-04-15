@@ -50,7 +50,7 @@ func (u *UserService) Login(email, password string) (string, error) {
 func (u *UserService) Authenticate(jwt string) (int, error) {
 	id, err := crypto.VerifyJWT(u.jwtConfig, jwt)
 	if err != nil {
-		return -1, NewUserServiceError("couldn't verify JWT", err)
+		return -1, ErrInvalidJWT.Wrap(err)
 	}
 
 	_, err = u.repo.GetByID(id)

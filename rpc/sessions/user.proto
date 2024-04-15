@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option go_package = "./sessions";
+
+package sessions;
+
+service User {
+    rpc Authenticate (AuthenticateRequest) returns (AuthenticateResponse);
+}
+
+message AuthenticateRequest {
+    string token = 1;
+}
+
+message AuthenticateResponse {
+    int32 id = 1;
+}

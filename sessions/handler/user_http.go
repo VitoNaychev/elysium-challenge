@@ -18,6 +18,7 @@ type IUserService interface {
 	Create(*domain.User) error
 	Login(string, string) (string, error)
 	Logout(string) error
+	Authenticate(string) (int, error)
 }
 
 type UserHandler struct {
