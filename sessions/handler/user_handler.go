@@ -10,12 +10,14 @@ import (
 )
 
 var (
-	ErrEmptyBody = errors.New("request body is empty")
+	ErrEmptyBody    = errors.New("request body is empty")
+	ErrMissingToken = errors.New("missing token in request")
 )
 
 type IUserService interface {
 	Create(*domain.User) error
 	Login(string, string) (string, error)
+	Logout(string) error
 }
 
 type UserHandler struct {
@@ -73,6 +75,28 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Token: jwt,
 	}
 	json.NewEncoder(w).Encode(response)
+}
+
+func (u *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	jwt := r.Header.Get("Token")
+	if jwt == "" {
+		writeErrorResponse(w, http.StatusBadRequest, ErrMissingToken)
+		return
+	}
+
+	err := u.userService.Logout(jwt)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidJWT) {
+			writeErrorResponse(w, http.StatusUnauthorized, err)
+			return
+		} else if errors.Is(err, service.ErrUserNotFound) {
+			writeErrorResponse(w, http.StatusNotFound, err)
+			return
+		} else {
+			writeErrorResponse(w, http.StatusInternalServerError, err)
+			return
+		}
+	}
 }
 
 func writeErrorResponse(w http.ResponseWriter, status int, err error) {

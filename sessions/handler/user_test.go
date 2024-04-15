@@ -19,7 +19,8 @@ type StubUserService struct {
 	dummyJWT    string
 	dummyErr    error
 
-	spyUser domain.User
+	spyUser      domain.User
+	spyLogoutJWT string
 }
 
 func (s *StubUserService) Create(user *domain.User) error {
@@ -33,6 +34,11 @@ func (s *StubUserService) Create(user *domain.User) error {
 
 func (s *StubUserService) Login(email, password string) (string, error) {
 	return s.dummyJWT, s.dummyErr
+}
+
+func (s *StubUserService) Logout(jwt string) error {
+	s.spyLogoutJWT = jwt
+	return s.dummyErr
 }
 
 func TestSignUpHandler(t *testing.T) {
@@ -262,6 +268,100 @@ func TestLoginHandler(t *testing.T) {
 		userHandler := handler.NewUserHandler(userService)
 
 		userHandler.Login(response, request)
+		assert.Equal(t, response.Code, http.StatusInternalServerError)
+
+		var gotResponse handler.ErrorResponse
+		json.NewDecoder(response.Body).Decode(&gotResponse)
+
+		assert.Equal(t, gotResponse.Message, dummyError.Error())
+	})
+}
+
+func TestLogoutHandler(t *testing.T) {
+	t.Run("calls UserService.Logout", func(t *testing.T) {
+		wantJWT := "sampleToken"
+
+		request, _ := http.NewRequest(http.MethodPost, "/user/logout", nil)
+		request.Header.Add("Token", wantJWT)
+
+		response := httptest.NewRecorder()
+
+		userService := &StubUserService{}
+		userHandler := handler.NewUserHandler(userService)
+
+		userHandler.Logout(response, request)
+		assert.Equal(t, response.Code, http.StatusOK)
+
+		assert.Equal(t, userService.spyLogoutJWT, wantJWT)
+	})
+
+	t.Run("returns Bad Request on missing JWT", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPost, "/user/logout", nil)
+		response := httptest.NewRecorder()
+
+		userService := &StubUserService{}
+		userHandler := handler.NewUserHandler(userService)
+
+		userHandler.Logout(response, request)
+		assert.Equal(t, response.Code, http.StatusBadRequest)
+
+		var gotResponse handler.ErrorResponse
+		json.NewDecoder(response.Body).Decode(&gotResponse)
+
+		assert.Equal(t, gotResponse.Message, handler.ErrMissingToken.Error())
+	})
+
+	t.Run("returns Unathorized on invalid JWT", func(t *testing.T) {
+		dummyJWT := "sampleToken"
+		dummyErr := service.ErrInvalidJWT
+
+		request, _ := http.NewRequest(http.MethodPost, "/user/logout", nil)
+		request.Header.Add("Token", dummyJWT)
+
+		response := httptest.NewRecorder()
+
+		userService := &StubUserService{
+			dummyErr: dummyErr,
+		}
+		userHandler := handler.NewUserHandler(userService)
+
+		userHandler.Logout(response, request)
+		assert.Equal(t, response.Code, http.StatusUnauthorized)
+	})
+
+	t.Run("returns Not Found on ErrUserNotFound", func(t *testing.T) {
+		dummyJWT := "sampleToken"
+		dummyErr := service.ErrUserNotFound
+
+		request, _ := http.NewRequest(http.MethodPost, "/user/logout", nil)
+		request.Header.Add("Token", dummyJWT)
+
+		response := httptest.NewRecorder()
+
+		userService := &StubUserService{
+			dummyErr: dummyErr,
+		}
+		userHandler := handler.NewUserHandler(userService)
+
+		userHandler.Logout(response, request)
+		assert.Equal(t, response.Code, http.StatusNotFound)
+	})
+
+	t.Run("returns Internal Server Error on unknown error from UserService", func(t *testing.T) {
+		dummyJWT := "sampleToken"
+		dummyError := errors.New("dummy error")
+
+		request, _ := http.NewRequest(http.MethodPost, "/user/logout", nil)
+		request.Header.Add("Token", dummyJWT)
+
+		response := httptest.NewRecorder()
+
+		userService := &StubUserService{
+			dummyErr: dummyError,
+		}
+		userHandler := handler.NewUserHandler(userService)
+
+		userHandler.Logout(response, request)
 		assert.Equal(t, response.Code, http.StatusInternalServerError)
 
 		var gotResponse handler.ErrorResponse
