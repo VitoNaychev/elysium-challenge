@@ -18,7 +18,7 @@ func NewUserService(jwtConfig crypto.JWTConfig, repo repository.UserRepo) *UserS
 	}
 }
 
-func (u *UserService) CreateUser(user *domain.User) error {
+func (u *UserService) Create(user *domain.User) error {
 	u.repo.Create(user)
 
 	jwt, _ := crypto.GenerateJWT(u.jwtConfig, user.ID)

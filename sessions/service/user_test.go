@@ -71,7 +71,7 @@ func TestCreateUser(t *testing.T) {
 		userService := service.NewUserService(jwtConfig, repo)
 
 		dirtyUser := wantUser
-		err := userService.CreateUser(&dirtyUser)
+		err := userService.Create(&dirtyUser)
 		assert.RequireNoError(t, err)
 
 		wantUser.ID = wantUserID
@@ -91,7 +91,7 @@ func TestCreateUser(t *testing.T) {
 		userService := service.NewUserService(jwtConfig, repo)
 
 		dirtyUser := wantUser
-		err := userService.CreateUser(&dirtyUser)
+		err := userService.Create(&dirtyUser)
 		assert.RequireNoError(t, err)
 
 		if len(dirtyUser.JWTs) != 1 {
@@ -114,7 +114,7 @@ func TestCreateUser(t *testing.T) {
 		userService := service.NewUserService(jwtConfig, repo)
 
 		dirtyUser := wantUser
-		err := userService.CreateUser(&dirtyUser)
+		err := userService.Create(&dirtyUser)
 		assert.RequireNoError(t, err)
 
 		// check that the JWT was persisted in the repository
