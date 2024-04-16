@@ -6,5 +6,5 @@ CREATE TABLE users (
     last_name           varchar(20)          NOT NULL,
     email               varchar(60)          UNIQUE NOT NULL,
     password            varchar(72)          NOT NULL,
-    jwts                varchar(72)[]        NOT NULL
+    jwts                varchar[]
 );

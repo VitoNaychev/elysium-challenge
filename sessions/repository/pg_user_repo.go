@@ -23,7 +23,7 @@ func NewPGUserRepository(ctx context.Context, connString string) (*PGUserReposit
 }
 
 func (p *PGUserRepository) Create(user *domain.User) error {
-	query := `insert into users(first_name, last_name, email, password) 
+	query := `insert into users(first_name, last_name, email, password, jwts) 
 	values (@firstName, @lastName, @email, @password, @jwts) returning id`
 	args := pgx.NamedArgs{
 		"firstName": user.FirstName,
@@ -39,7 +39,7 @@ func (p *PGUserRepository) Create(user *domain.User) error {
 
 func (p *PGUserRepository) Update(user *domain.User) error {
 	query := `update users set first_name=@first_name, last_name=@last_name, 
-		email=@email, password=@password, @jwts=@jwts where id=@id`
+		email=@email, password=@password, jwts=@jwts where id=@id`
 	args := pgx.NamedArgs{
 		"id":         user.ID,
 		"first_name": user.FirstName,

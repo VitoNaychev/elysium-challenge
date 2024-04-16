@@ -8,8 +8,8 @@ var ErrJWTNotFound = errors.New("jwt not found is user JWTs array")
 
 type User struct {
 	ID        int
-	FirstName string
-	LastName  string
+	FirstName string `db:"first_name"`
+	LastName  string `db:"last_name"`
 	Email     string
 	Password  string
 	JWTs      []string
