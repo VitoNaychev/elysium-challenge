@@ -1,0 +1,44 @@
+version: '3'
+services:
+  sessions-db:
+    image: postgres:latest
+    container_name: customer-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASS}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./sql-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - my-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} -h localhost -p 5432"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  sessions:
+    build:
+      context: ..
+      dockerfile: ./sessions/Dockerfile
+    container_name: sessions
+    ports:
+      - "8080:8080"
+      - "6060:6060"
+    environment:
+      SECRET: ${SECRET}
+      EXPIRES_AT: ${EXPIRES_AT}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASS: ${POSTGRES_PASS}
+      POSTGRES_DB: ${POSTGRES_DB}
+    depends_on:
+      sessions-db:
+        condition: service_healthy
+    networks:
+      - my-network
+
+networks:
+  my-network:
+    driver: bridge
