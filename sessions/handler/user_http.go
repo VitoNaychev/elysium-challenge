@@ -21,17 +21,28 @@ type UserService interface {
 	Authenticate(string) (int, error)
 }
 
-type UserHandler struct {
+type UserHTTPHandler struct {
 	userService UserService
+
+	http.Handler
 }
 
-func NewUserHandler(userService UserService) *UserHandler {
-	return &UserHandler{
+func NewUserHTTPHandler(userService UserService) *UserHTTPHandler {
+	userHandler := UserHTTPHandler{
 		userService: userService,
 	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/user/signup", userHandler.SignUp)
+	mux.HandleFunc("/user/login", userHandler.Login)
+	mux.HandleFunc("/user/Logout", userHandler.Logout)
+
+	userHandler.Handler = mux
+
+	return &userHandler
 }
 
-func (u *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
+func (u *UserHTTPHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	if r.Body == nil {
 		writeErrorResponse(w, http.StatusBadRequest, ErrEmptyBody)
 		return
@@ -52,7 +63,7 @@ func (u *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (u *UserHTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Body == nil {
 		writeErrorResponse(w, http.StatusBadRequest, ErrEmptyBody)
 		return
@@ -78,7 +89,7 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func (u *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
+func (u *UserHTTPHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	jwt := r.Header.Get("Token")
 	if jwt == "" {
 		writeErrorResponse(w, http.StatusBadRequest, ErrMissingToken)

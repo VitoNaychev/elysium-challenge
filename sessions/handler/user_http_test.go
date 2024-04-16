@@ -67,7 +67,7 @@ func TestSignUpHandler(t *testing.T) {
 		response := httptest.NewRecorder()
 
 		userService := &StubUserService{}
-		userHandler := handler.NewUserHandler(userService)
+		userHandler := handler.NewUserHTTPHandler(userService)
 		userHandler.SignUp(response, request)
 
 		assert.Equal(t, response.Code, http.StatusOK)
@@ -107,7 +107,7 @@ func TestSignUpHandler(t *testing.T) {
 			dummyUserID: dummyUserID,
 			dummyJWT:    dummyJWT,
 		}
-		userHandler := handler.NewUserHandler(userService)
+		userHandler := handler.NewUserHTTPHandler(userService)
 
 		userHandler.SignUp(response, request)
 		assert.Equal(t, response.Code, http.StatusOK)
@@ -123,7 +123,7 @@ func TestSignUpHandler(t *testing.T) {
 		response := httptest.NewRecorder()
 
 		userService := &StubUserService{}
-		userHandler := handler.NewUserHandler(userService)
+		userHandler := handler.NewUserHTTPHandler(userService)
 
 		userHandler.SignUp(response, request)
 		assert.Equal(t, response.Code, http.StatusBadRequest)
@@ -153,7 +153,7 @@ func TestSignUpHandler(t *testing.T) {
 		userService := &StubUserService{
 			dummyErr: dummyError,
 		}
-		userHandler := handler.NewUserHandler(userService)
+		userHandler := handler.NewUserHTTPHandler(userService)
 
 		userHandler.SignUp(response, request)
 		assert.Equal(t, response.Code, http.StatusInternalServerError)
@@ -185,7 +185,7 @@ func TestLoginHandler(t *testing.T) {
 		userService := &StubUserService{
 			dummyJWT: wantResponse.Token,
 		}
-		userHandler := handler.NewUserHandler(userService)
+		userHandler := handler.NewUserHTTPHandler(userService)
 
 		userHandler.Login(response, request)
 		assert.Equal(t, response.Code, http.StatusOK)
@@ -213,7 +213,7 @@ func TestLoginHandler(t *testing.T) {
 		userService := &StubUserService{
 			dummyErr: dummyError,
 		}
-		userHandler := handler.NewUserHandler(userService)
+		userHandler := handler.NewUserHTTPHandler(userService)
 
 		userHandler.Login(response, request)
 		assert.Equal(t, response.Code, http.StatusUnauthorized)
@@ -241,7 +241,7 @@ func TestLoginHandler(t *testing.T) {
 		userService := &StubUserService{
 			dummyErr: dummyError,
 		}
-		userHandler := handler.NewUserHandler(userService)
+		userHandler := handler.NewUserHTTPHandler(userService)
 
 		userHandler.Login(response, request)
 		assert.Equal(t, response.Code, http.StatusUnauthorized)
@@ -269,7 +269,7 @@ func TestLoginHandler(t *testing.T) {
 		userService := &StubUserService{
 			dummyErr: dummyError,
 		}
-		userHandler := handler.NewUserHandler(userService)
+		userHandler := handler.NewUserHTTPHandler(userService)
 
 		userHandler.Login(response, request)
 		assert.Equal(t, response.Code, http.StatusInternalServerError)
@@ -291,7 +291,7 @@ func TestLogoutHandler(t *testing.T) {
 		response := httptest.NewRecorder()
 
 		userService := &StubUserService{}
-		userHandler := handler.NewUserHandler(userService)
+		userHandler := handler.NewUserHTTPHandler(userService)
 
 		userHandler.Logout(response, request)
 		assert.Equal(t, response.Code, http.StatusOK)
@@ -304,7 +304,7 @@ func TestLogoutHandler(t *testing.T) {
 		response := httptest.NewRecorder()
 
 		userService := &StubUserService{}
-		userHandler := handler.NewUserHandler(userService)
+		userHandler := handler.NewUserHTTPHandler(userService)
 
 		userHandler.Logout(response, request)
 		assert.Equal(t, response.Code, http.StatusBadRequest)
@@ -327,7 +327,7 @@ func TestLogoutHandler(t *testing.T) {
 		userService := &StubUserService{
 			dummyErr: dummyErr,
 		}
-		userHandler := handler.NewUserHandler(userService)
+		userHandler := handler.NewUserHTTPHandler(userService)
 
 		userHandler.Logout(response, request)
 		assert.Equal(t, response.Code, http.StatusUnauthorized)
@@ -345,7 +345,7 @@ func TestLogoutHandler(t *testing.T) {
 		userService := &StubUserService{
 			dummyErr: dummyErr,
 		}
-		userHandler := handler.NewUserHandler(userService)
+		userHandler := handler.NewUserHTTPHandler(userService)
 
 		userHandler.Logout(response, request)
 		assert.Equal(t, response.Code, http.StatusNotFound)
@@ -363,7 +363,7 @@ func TestLogoutHandler(t *testing.T) {
 		userService := &StubUserService{
 			dummyErr: dummyError,
 		}
-		userHandler := handler.NewUserHandler(userService)
+		userHandler := handler.NewUserHTTPHandler(userService)
 
 		userHandler.Logout(response, request)
 		assert.Equal(t, response.Code, http.StatusInternalServerError)
