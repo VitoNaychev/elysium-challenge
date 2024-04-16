@@ -19,12 +19,22 @@ func NewUserService(jwtConfig crypto.JWTConfig, repo repository.UserRepo) *UserS
 }
 
 func (u *UserService) Create(user *domain.User) error {
-	u.repo.Create(user)
+	err := u.repo.Create(user)
+	if err != nil {
+		return NewUserServiceError("couldn't create user", err)
+	}
 
-	jwt, _ := crypto.GenerateJWT(u.jwtConfig, user.ID)
+	jwt, err := crypto.GenerateJWT(u.jwtConfig, user.ID)
+	if err != nil {
+		return NewUserServiceError("couldn't generate JWT", err)
+	}
+
 	user.JWTs = []string{jwt}
 
-	u.repo.Update(user)
+	err = u.repo.Update(user)
+	if err != nil {
+		return NewUserServiceError("couldn't update user", err)
+	}
 
 	return nil
 }
