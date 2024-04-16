@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/VitoNaychev/elysium-challenge/sessions/domain"
@@ -12,7 +13,7 @@ type PGUserRepository struct {
 	conn *pgx.Conn
 }
 
-func NewPostgresUserRepository(ctx context.Context, connString string) (*PGUserRepository, error) {
+func NewPGUserRepository(ctx context.Context, connString string) (*PGUserRepository, error) {
 	conn, err := pgx.Connect(ctx, connString)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to database: %w", err)
@@ -62,6 +63,9 @@ func (p *PGUserRepository) GetByID(id int) (domain.User, error) {
 	user, err := pgx.CollectOneRow(row, pgx.RowToStructByName[domain.User])
 
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.User{}, ErrNotFound
+		}
 		return domain.User{}, err
 	}
 
@@ -78,6 +82,9 @@ func (p *PGUserRepository) GetByEmail(email string) (domain.User, error) {
 	user, err := pgx.CollectOneRow(row, pgx.RowToStructByName[domain.User])
 
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.User{}, ErrNotFound
+		}
 		return domain.User{}, err
 	}
 
