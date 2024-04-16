@@ -35,7 +35,7 @@ func NewUserHTTPHandler(userService UserService) *UserHTTPHandler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/user/signup", userHandler.SignUp)
 	mux.HandleFunc("/user/login", userHandler.Login)
-	mux.HandleFunc("/user/Logout", userHandler.Logout)
+	mux.HandleFunc("/user/logout", userHandler.Logout)
 
 	userHandler.Handler = mux
 
