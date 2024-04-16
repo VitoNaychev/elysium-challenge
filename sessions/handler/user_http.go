@@ -14,7 +14,7 @@ var (
 	ErrMissingToken = errors.New("missing token in request")
 )
 
-type IUserService interface {
+type UserService interface {
 	Create(*domain.User) error
 	Login(string, string) (string, error)
 	Logout(string) error
@@ -22,10 +22,10 @@ type IUserService interface {
 }
 
 type UserHandler struct {
-	userService IUserService
+	userService UserService
 }
 
-func NewUserHandler(userService IUserService) *UserHandler {
+func NewUserHandler(userService UserService) *UserHandler {
 	return &UserHandler{
 		userService: userService,
 	}

@@ -11,10 +11,10 @@ import (
 type UserRPCHandler struct {
 	sessions.UnimplementedUserServer
 
-	userService IUserService
+	userService UserService
 }
 
-func NewUserRPCHandler(userService IUserService) *UserRPCHandler {
+func NewUserRPCHandler(userService UserService) *UserRPCHandler {
 	return &UserRPCHandler{
 		userService: userService,
 	}
