@@ -1,0 +1,11 @@
+gateway:
+  listenPort: :8080
+  authenticateAddr: sessions:6060 
+  routes:
+    - name: sessions
+      context: /user/
+      target: http://sessions:8080
+    - name: wallet-svc
+      context: /wallet/
+      target: http://wallet-svc:8080
+      authenticate: true
